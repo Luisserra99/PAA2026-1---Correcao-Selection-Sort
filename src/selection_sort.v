@@ -1,9 +1,7 @@
-(* begin hide *)
 From Stdlib Require Import Arith List Lia.
 From Stdlib Require Import Recdef.
 From Stdlib Require Import Sorted.
 From Stdlib Require Import Permutation.
-(* end hide *)
 
 (** A função [select_min] a seguir, recebe uma lista de naturais e retorna o menor elemento desta lista. Se a lista for vazia, [select_min nil] retorna None. *)
 
@@ -43,7 +41,6 @@ Theorem selectionsort_correct: forall l, Sorted le (ss l) /\ Permutation l (ss l
 .
 Proof. Admitted.
 
-(** Repositório: %\url{https://github.com/flaviodemoura/selection_sort}% *)
    
  
   
