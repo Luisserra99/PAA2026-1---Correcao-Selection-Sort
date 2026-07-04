@@ -1,9 +1,8 @@
 (* begin hide *)
-Require Import Arith List Lia.
-Require Import Recdef.
-Require Import Sorted.
-Require Import Permutation.
-Require Import Recdef.
+From Stdlib Require Import Arith List Lia.
+From Stdlib Require Import Recdef.
+From Stdlib Require Import Sorted.
+From Stdlib Require Import Permutation.
 (* end hide *)
 
 (** A função [select_min] a seguir, recebe uma lista de naturais e retorna o menor elemento desta lista. Se a lista for vazia, [select_min nil] retorna None. *)

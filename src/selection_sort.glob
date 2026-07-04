@@ -1,0 +1,87 @@
+DIGEST cfbc9169abedaf6d83c243a68031e1bd
+FBubbleSort.selection_sort
+R44:48 Stdlib.Arith.Arith <> <> lib
+R50:53 Stdlib.Lists.List <> <> lib
+R55:57 Stdlib.micromega.Lia <> <> lib
+R87:92 Stdlib.funind.Recdef <> <> lib
+R122:127 Stdlib.Sorting.Sorted <> <> lib
+R157:167 Stdlib.Sorting.Permutation <> <> lib
+R375:378 Corelib.Init.Datatypes <> list ind
+R380:382 Corelib.Init.Datatypes <> nat ind
+binder 371:371 <> l:1
+R406:411 Corelib.Init.Datatypes <> option ind
+R413:415 Corelib.Init.Datatypes <> nat ind
+R428:428 BubbleSort.selection_sort <> l:1 var
+R439:441 Corelib.Init.Datatypes <> nil constr
+R446:449 Corelib.Init.Datatypes <> None constr
+R456:457 Corelib.Init.Datatypes <> ::list_scope:x_'::'_x not
+R458:460 Corelib.Init.Datatypes <> nil constr
+R465:468 Corelib.Init.Datatypes <> Some constr
+R478:479 Corelib.Init.Datatypes <> ::list_scope:x_'::'_x not
+R482:483 Corelib.Init.Datatypes <> ::list_scope:x_'::'_x not
+R495:499 Stdlib.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R533:542 BubbleSort.selection_sort <> select_min:2 def
+R547:548 Corelib.Init.Datatypes <> ::list_scope:x_'::'_x not
+R508:517 BubbleSort.selection_sort <> select_min:2 def
+R522:523 Corelib.Init.Datatypes <> ::list_scope:x_'::'_x not
+binder 371:371 <> l:4
+binder 371:371 <> l:5
+binder 371:371 <> l:7
+R428:428 BubbleSort.selection_sort <> l:7 var
+R533:542 BubbleSort.selection_sort <> select_min:6 def
+R508:517 BubbleSort.selection_sort <> select_min:6 def
+binder 371:371 <> l:9
+binder 371:371 <> l:10
+R428:428 BubbleSort.selection_sort <> l:10 var
+R394:399 Corelib.Init.Datatypes <> length def
+def 608:613 <> le_all
+binder 615:615 <> x:30
+binder 617:617 <> l:31
+binder 629:629 <> y:32
+R638:641 Corelib.Init.Notations <> ::type_scope:x_'->'_x not
+R632:633 Stdlib.Lists.List <> In def
+R637:637 BubbleSort.selection_sort <> l:31 var
+R635:635 BubbleSort.selection_sort <> y:32 var
+R643:646 Corelib.Init.Peano <> ::nat_scope:x_'<='_x not
+R642:642 BubbleSort.selection_sort <> x:30 var
+R647:647 BubbleSort.selection_sort <> y:32 var
+prf 840:857 <> select_min_correct
+binder 868:868 <> l:33
+binder 870:870 <> m:34
+R894:897 Corelib.Init.Notations <> ::type_scope:x_'->'_x not
+R885:887 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R873:882 BubbleSort.selection_sort <> select_min thm
+R884:884 BubbleSort.selection_sort <> l:33 var
+R888:891 Corelib.Init.Datatypes <> Some constr
+R893:893 BubbleSort.selection_sort <> m:34 var
+R898:903 BubbleSort.selection_sort <> le_all def
+R905:905 BubbleSort.selection_sort <> m:34 var
+R907:907 BubbleSort.selection_sort <> l:33 var
+R955:964 BubbleSort.selection_sort <> select_min thm
+def 1104:1105 <> ss
+R1111:1114 Corelib.Init.Datatypes <> list ind
+R1116:1118 Corelib.Init.Datatypes <> nat ind
+binder 1108:1108 <> l:35
+R1132:1132 BubbleSort.selection_sort <> l:35 var
+R1143:1145 Corelib.Init.Datatypes <> nil constr
+R1150:1152 Corelib.Init.Datatypes <> nil constr
+R1159:1160 Corelib.Init.Datatypes <> ::list_scope:x_'::'_x not
+R1173:1182 BubbleSort.selection_sort <> select_min thm
+R1184:1184 BubbleSort.selection_sort <> l:35 var
+R1206:1209 Corelib.Init.Datatypes <> None constr
+R1214:1216 Corelib.Init.Datatypes <> nil constr
+R1233:1236 Corelib.Init.Datatypes <> Some constr
+R1244:1246 Corelib.Init.Datatypes <> ::list_scope:x_'::'_x not
+R1252:1252 Corelib.Init.Datatypes <> ::list_scope:x_'::'_x not
+R1247:1248 BubbleSort.selection_sort <> ss:36 def
+prf 1421:1441 <> selectionsort_correct
+binder 1451:1451 <> l:38
+R1470:1473 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
+R1454:1459 Stdlib.Sorting.Sorted <> Sorted ind
+R1465:1466 BubbleSort.selection_sort <> ss def
+R1468:1468 BubbleSort.selection_sort <> l:38 var
+R1461:1462 Corelib.Init.Peano <> le ind
+R1474:1484 Stdlib.Sorting.Permutation <> Permutation ind
+R1489:1490 BubbleSort.selection_sort <> ss def
+R1492:1492 BubbleSort.selection_sort <> l:38 var
+R1486:1486 BubbleSort.selection_sort <> l:38 var
