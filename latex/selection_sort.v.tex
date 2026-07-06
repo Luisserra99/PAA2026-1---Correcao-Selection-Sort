@@ -1,0 +1,136 @@
+\begin{coqdoccode}
+\coqdocnoindent
+\coqdockw{From} \coqdocvar{Stdlib} \coqdockw{Require} \coqdockw{Import} \coqdocvar{Arith} \coqdocvar{List} \coqdocvar{Lia}.\coqdoceol
+\coqdocnoindent
+\coqdockw{From} \coqdocvar{Stdlib} \coqdockw{Require} \coqdockw{Import} \coqdocvar{Recdef}.\coqdoceol
+\coqdocnoindent
+\coqdockw{From} \coqdocvar{Stdlib} \coqdockw{Require} \coqdockw{Import} \coqdocvar{Sorted}.\coqdoceol
+\coqdocnoindent
+\coqdockw{From} \coqdocvar{Stdlib} \coqdockw{Require} \coqdockw{Import} \coqdocvar{Permutation}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Import} \coqdocvar{ListNotations}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+\coqdoclemma{select\_min} recebe uma lista de naturais e retorna o menor elemento
+    desta lista. Se a lista for vazia, \coqdoclemma{select\_min} \coqexternalref{nil}{http://rocq-prover.org/doc/V9.2/corelib//Corelib.Init.Datatypes}{\coqdocconstructor{nil}} retorna None. 
+\begin{coqdoccode}
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Function} \coqdocvar{select\_min} (\coqdocvar{l} : \coqdocvar{list} \coqdocvar{nat}) \{\coqdockw{measure} \coqdocvar{length} \coqdocvar{l}\} : \coqdocvar{option} \coqdocvar{nat} :=\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{match} \coqdocvar{l} \coqdockw{with}\coqdoceol
+\coqdocindent{1.00em}
+\ensuremath{|} \coqdocvar{nil} \ensuremath{\Rightarrow} \coqdocvar{None}\coqdoceol
+\coqdocindent{1.00em}
+\ensuremath{|} \coqdocvar{h}::\coqdocvar{nil} \ensuremath{\Rightarrow} \coqdocvar{Some} \coqdocvar{h}\coqdoceol
+\coqdocindent{1.00em}
+\ensuremath{|} \coqdocvar{h1}::\coqdocvar{h2}::\coqdocvar{tl} \ensuremath{\Rightarrow} \coqdockw{if} \coqdocvar{h1} <=? \coqdocvar{h2} \coqdockw{then} \coqdocvar{select\_min} (\coqdocvar{h1}::\coqdocvar{tl}) \coqdockw{else} \coqdocvar{select\_min} (\coqdocvar{h2}::\coqdocvar{tl})\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{end}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Definition} \coqdocvar{le\_all} \coqdocvar{x} \coqdocvar{l} := \coqdockw{\ensuremath{\forall}} \coqdocvar{y}, \coqdocvar{In} \coqdocvar{y} \coqdocvar{l} \ensuremath{\rightarrow} \coqdocvar{x} \ensuremath{\le} \coqdocvar{y}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+Se \coqdoclemma{select\_min} \coqdocvar{l} retorna um natural \coqdocvar{m}, então \coqdocvar{m} é menor ou igual a
+    todos os elementos de \coqdocvar{l}. 
+\begin{coqdoccode}
+\coqdocnoindent
+\coqdockw{Lemma} \coqdocvar{select\_min\_correct} : \coqdockw{\ensuremath{\forall}} \coqdocvar{l} \coqdocvar{m}, \coqdocvar{select\_min} \coqdocvar{l} = \coqdocvar{Some} \coqdocvar{m} \ensuremath{\rightarrow} \coqdocvar{le\_all} \coqdocvar{m} \coqdocvar{l}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+Se \coqdoclemma{select\_min} \coqdocvar{l} retorna \coqexternalref{Some}{http://rocq-prover.org/doc/V9.2/corelib//Corelib.Init.Datatypes}{\coqdocconstructor{Some}} \coqdocvar{m}, então \coqdocvar{m} pertence a \coqdocvar{l}. Isso é
+    necessário para garantir que \coqdocdefinition{remove\_one} de fato diminui o tamanho da
+    lista (usado na medida da função \coqdoclemma{ss} mais abaixo). 
+\begin{coqdoccode}
+\coqdocnoindent
+\coqdockw{Lemma} \coqdocvar{select\_min\_in} : \coqdockw{\ensuremath{\forall}} \coqdocvar{l} \coqdocvar{m}, \coqdocvar{select\_min} \coqdocvar{l} = \coqdocvar{Some} \coqdocvar{m} \ensuremath{\rightarrow} \coqdocvar{In} \coqdocvar{m} \coqdocvar{l}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+Corolário: se \coqdoclemma{select\_min} \coqdocvar{l} = \coqexternalref{None}{http://rocq-prover.org/doc/V9.2/corelib//Corelib.Init.Datatypes}{\coqdocconstructor{None}}, então \coqdocvar{l} é vazia (o único caso da
+    definição que retorna None é o caso nil). 
+\begin{coqdoccode}
+\coqdocnoindent
+\coqdockw{Lemma} \coqdocvar{select\_min\_none} : \coqdockw{\ensuremath{\forall}} \coqdocvar{l}, \coqdocvar{select\_min} \coqdocvar{l} = \coqdocvar{None} \ensuremath{\rightarrow} \coqdocvar{l} = \coqdocvar{nil}.\coqdoceol
+\coqdocemptyline
+\coqdocemptyline
+\end{coqdoccode}
+\coqdocdefinition{remove\_one} \coqdocvar{x} \coqdocvar{l} remove UMA ocorrência do elemento \coqdocvar{x} da lista \coqdocvar{l}.
+    Esta função corrige o bug da definição original de \coqdoclemma{ss}, que recursava
+    sobre a cauda \coqdocvar{tl} em vez de remover o mínimo efetivamente encontrado. 
+\begin{coqdoccode}
+\coqdocnoindent
+\coqdockw{Fixpoint} \coqdocvar{remove\_one} (\coqdocvar{x} : \coqdocvar{nat}) (\coqdocvar{l} : \coqdocvar{list} \coqdocvar{nat}) : \coqdocvar{list} \coqdocvar{nat} :=\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{match} \coqdocvar{l} \coqdockw{with}\coqdoceol
+\coqdocindent{1.00em}
+\ensuremath{|} \coqdocvar{nil} \ensuremath{\Rightarrow} \coqdocvar{nil}\coqdoceol
+\coqdocindent{1.00em}
+\ensuremath{|} \coqdocvar{h} :: \coqdocvar{t} \ensuremath{\Rightarrow} \coqdockw{if} \coqdocvar{h} =? \coqdocvar{x} \coqdockw{then} \coqdocvar{t} \coqdockw{else} \coqdocvar{h} :: \coqdocvar{remove\_one} \coqdocvar{x} \coqdocvar{t}\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{end}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Lemma} \coqdocvar{remove\_one\_length} : \coqdockw{\ensuremath{\forall}} \coqdocvar{x} \coqdocvar{l}, \coqdocvar{In} \coqdocvar{x} \coqdocvar{l} \ensuremath{\rightarrow} \coqdocvar{length} (\coqdocvar{remove\_one} \coqdocvar{x} \coqdocvar{l}) < \coqdocvar{length} \coqdocvar{l}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Lemma} \coqdocvar{remove\_one\_In} : \coqdockw{\ensuremath{\forall}} \coqdocvar{y} \coqdocvar{x} \coqdocvar{l}, \coqdocvar{In} \coqdocvar{y} (\coqdocvar{remove\_one} \coqdocvar{x} \coqdocvar{l}) \ensuremath{\rightarrow} \coqdocvar{In} \coqdocvar{y} \coqdocvar{l}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Lemma} \coqdocvar{remove\_one\_perm} : \coqdockw{\ensuremath{\forall}} \coqdocvar{x} \coqdocvar{l}, \coqdocvar{In} \coqdocvar{x} \coqdocvar{l} \ensuremath{\rightarrow} \coqdocvar{Permutation} \coqdocvar{l} (\coqdocvar{x} :: \coqdocvar{remove\_one} \coqdocvar{x} \coqdocvar{l}).\coqdoceol
+\coqdocemptyline
+\coqdocemptyline
+\end{coqdoccode}
+Se \coqdocvar{l} está ordenada e \coqdocvar{x} é menor ou igual a todos os elementos de \coqdocvar{l},
+    então \coqdocvar{x}::\coqdocvar{l} também está ordenada. 
+\begin{coqdoccode}
+\coqdocnoindent
+\coqdockw{Lemma} \coqdocvar{le\_all\_sorted} : \coqdockw{\ensuremath{\forall}} \coqdocvar{l} \coqdocvar{x}, \coqdocvar{Sorted} \coqdocvar{le} \coqdocvar{l} \ensuremath{\rightarrow} \coqdocvar{le\_all} \coqdocvar{x} \coqdocvar{l} \ensuremath{\rightarrow} \coqdocvar{Sorted} \coqdocvar{le} (\coqdocvar{x} :: \coqdocvar{l}).\coqdoceol
+\coqdocemptyline
+\coqdocemptyline
+\end{coqdoccode}
+ATENÇÃO / correção do enunciado: a versão original do professor definia
+        ss (h::tl) := match select\_min l with Some m => m :: ss tl end
+    ou seja, recursava sobre \coqdocvar{tl} (a lista SEM a cabeça), e não sobre a lista
+    sem o MÍNIMO encontrado. Isso quebra a permutação: por exemplo,
+    ss 4;2;1;3 geraria 1;1;1;3 em vez de 1;2;3;4.
+    A correção é recursar sobre \coqdocdefinition{remove\_one} \coqdocvar{m} \coqdocvar{l}, removendo de fato o
+    elemento mínimo encontrado. 
+\begin{coqdoccode}
+\coqdocnoindent
+\coqdockw{Function} \coqdocvar{ss} (\coqdocvar{l} : \coqdocvar{list} \coqdocvar{nat}) \{\coqdockw{measure} \coqdocvar{length} \coqdocvar{l}\} : \coqdocvar{list} \coqdocvar{nat} :=\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{match} \coqdocvar{select\_min} \coqdocvar{l} \coqdockw{with}\coqdoceol
+\coqdocindent{1.00em}
+\ensuremath{|} \coqdocvar{None} \ensuremath{\Rightarrow} \coqdocvar{nil}\coqdoceol
+\coqdocindent{1.00em}
+\ensuremath{|} \coqdocvar{Some} \coqdocvar{m} \ensuremath{\Rightarrow} \coqdocvar{m} :: \coqdocvar{ss} (\coqdocvar{remove\_one} \coqdocvar{m} \coqdocvar{l})\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{end}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+Teorema final: \coqdoclemma{ss} retorna uma permutação ordenada da lista de entrada. 
+\begin{coqdoccode}
+\coqdocnoindent
+\coqdockw{Theorem} \coqdocvar{selectionsort\_correct} : \coqdockw{\ensuremath{\forall}} \coqdocvar{l}, \coqdocvar{Sorted} \coqdocvar{le} (\coqdocvar{ss} \coqdocvar{l}) \ensuremath{\land} \coqdocvar{Permutation} \coqdocvar{l} (\coqdocvar{ss} \coqdocvar{l}).\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+testes: 
+\begin{coqdoccode}
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Eval} \coqdoctac{compute} \coqdoctac{in} \coqdocvar{ss} [4;2;1;3].\coqdoceol
+\coqdocnoindent
+\coqdockw{Eval} \coqdoctac{compute} \coqdoctac{in} \coqdocvar{ss} [5;4;3;2;1].\coqdoceol
+\coqdocnoindent
+\coqdockw{Eval} \coqdoctac{compute} \coqdoctac{in} \coqdocvar{ss} (\coqdocvar{nil} : \coqdocvar{list} \coqdocvar{nat}).\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Lemma} \coqdocvar{teste1} : \coqdocvar{ss} [4;2;1;3] = [1;2;3;4].\coqdoceol
+ \coqdocemptyline
+\coqdocnoindent
+\coqdockw{Lemma} \coqdocvar{teste2} : \coqdocvar{ss} [5;4;3;2;1] = [1;2;3;4;5].\coqdoceol
+ \coqdocemptyline
+\coqdocnoindent
+\coqdockw{Lemma} \coqdocvar{teste3} : \coqdocvar{ss} (@\coqdocvar{nil} \coqdocvar{nat}) = \coqdocvar{nil}.\coqdoceol
+ \end{coqdoccode}

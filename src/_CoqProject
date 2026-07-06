@@ -1,2 +1,2 @@
--R . BubbleSort 
+-R . SelectionSort 
 selection_sort.v

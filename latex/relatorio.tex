@@ -18,13 +18,255 @@
 \newcommand{\tto}{\twoheadrightarrow}
 \newcommand{\ott}{\twoheadleftarrow}
 
-\title{Formalização da correção do algoritmo Bubblesort}
+\title{Formalização da correção do algoritmo Selection Sort}
 \author{Nome e matrícula}
 \date{\today}
 
 \begin{document}
 \maketitle
 
-\input{bubble_sort.v}
+\section{Introdução}
+
+Este relatório documenta a formalização, no assistente de provas Rocq (anteriormente
+conhecido como Coq), da correção do algoritmo de ordenação por seleção
+(\emph{Selection Sort}), proposta como Tema 2 do Projeto de Formalização da
+disciplina de Projeto e Análise de Algoritmos (2026/1).
+
+A correção de um algoritmo de ordenação é caracterizada por duas propriedades
+que devem valer simultaneamente sobre a lista de saída:
+
+\begin{itemize}
+  \item \textbf{Ordenação}: a lista resultante está ordenada (\texttt{Sorted le}).
+  \item \textbf{Permutação}: a lista resultante contém exatamente os mesmos
+        elementos da lista de entrada, com as mesmas multiplicidades
+        (\texttt{Permutation}).
+\end{itemize}
+
+O teorema final demonstrado é:
+\[
+\forall l,\; \mathtt{Sorted\ le\ (ss\ l)} \land \mathtt{Permutation\ l\ (ss\ l)}
+\]
+
+\section{O algoritmo Selection Sort}
+
+A ideia do algoritmo é simples: a cada etapa, encontra-se o menor elemento
+ainda não posicionado, e ele é movido para a frente da lista resultante. O
+processo se repete recursivamente sobre o restante da lista.
+
+A função auxiliar \texttt{select\_min} percorre a lista comparando elementos
+consecutivos e retorna o menor elemento encontrado (ou \texttt{None} se a
+lista for vazia). Como a recursão de \texttt{select\_min} não é estrutural —
+a chamada recursiva é feita sobre uma lista reconstruída (\texttt{h1::tl} ou
+\texttt{h2::tl}), e não sobre uma subestrutura direta do argumento original —
+foi necessário utilizar o comando \texttt{Function} com uma medida
+(\texttt{measure length l}) explícita, provando que essa medida decresce a
+cada chamada recursiva.
+
+\section{Erro identificado no enunciado}
+\label{sec:bug}
+
+Conforme incentivado pelo enunciado do projeto, documentamos aqui um erro
+encontrado na definição original de \texttt{ss} proposta no enunciado:
+
+\begin{verbatim}
+Fixpoint ss (l: list nat) :=
+  match l with
+  | nil => nil
+  | h::tl => match select_min l with
+             | None => nil
+             | Some m => m::(ss tl)
+             end
+  end.
+\end{verbatim}
+
+O problema está na chamada recursiva \texttt{ss tl}: ela recursiona sobre a
+\emph{cauda} da lista (\texttt{tl}), e não sobre a lista da qual o mínimo
+\texttt{m} foi de fato removido. Isso faz com que o elemento mínimo
+encontrado (\texttt{m}) permaneça na lista usada na próxima chamada
+recursiva, caso ele não seja a própria cabeça \texttt{h}.
+
+Um contraexemplo concreto evidencia o problema. Considere
+\texttt{l = [4;2;1;3]}:
+
+\begin{itemize}
+  \item \texttt{select\_min [4;2;1;3] = Some 1}, então o resultado começa com
+        \texttt{1 ::}.
+  \item A recursão, no entanto, é chamada sobre \texttt{tl = [2;1;3]} (a
+        cauda de \texttt{l}), e \emph{não} sobre \texttt{[4;2;3]} (a lista
+        sem o mínimo \texttt{1}).
+  \item Isso repete o elemento \texttt{1} nas chamadas seguintes e descarta
+        o elemento \texttt{4} definitivamente, produzindo
+        \texttt{ss [4;2;1;3] = [1;1;1;3]}.
+\end{itemize}
+
+O resultado \texttt{[1;1;1;3]} não é uma permutação de \texttt{[4;2;1;3]}
+(o elemento \texttt{4} desaparece e o \texttt{1} é triplicado). Logo, o
+teorema \texttt{selectionsort\_correct}, como enunciado sobre esta definição
+de \texttt{ss}, é \textbf{falso} — não haveria como demonstrá-lo em Rocq.
+
+\subsection{Correção proposta}
+
+A correção consiste em fazer a recursão sobre a lista da qual o mínimo foi
+efetivamente removido. Para isso, introduzimos a função auxiliar
+\texttt{remove\_one}, que remove uma única ocorrência de um elemento de uma
+lista:
+
+\begin{verbatim}
+Fixpoint remove_one (x : nat) (l : list nat) : list nat :=
+  match l with
+  | nil => nil
+  | h :: tl => if h =? x then tl else h :: remove_one x tl
+  end.
+\end{verbatim}
+
+E redefinimos \texttt{ss} como:
+
+\begin{verbatim}
+Function ss (l : list nat) {measure length l} : list nat :=
+  match select_min l with
+  | None => nil
+  | Some m => m :: ss (remove_one m l)
+  end.
+\end{verbatim}
+
+Com esta correção, \texttt{ss [4;2;1;3]} computa corretamente para
+\texttt{[1;2;3;4]} (verificado por \texttt{Eval compute}, Seção
+\ref{sec:testes}).
+
+\section{Estratégia de formalização}
+
+A prova foi organizada em quatro blocos de lemas auxiliares, culminando no
+teorema principal.
+
+\subsection{Corretude de \texttt{select\_min}}
+
+Dois lemas caracterizam o comportamento de \texttt{select\_min}:
+
+\begin{itemize}
+  \item \texttt{select\_min\_correct}: se \texttt{select\_min l = Some m},
+        então \texttt{m} é menor ou igual a todos os elementos de \texttt{l}
+        (formalizado pelo predicado auxiliar \texttt{le\_all}).
+  \item \texttt{select\_min\_in}: se \texttt{select\_min l = Some m}, então
+        \texttt{m} pertence a \texttt{l}. Este lema é necessário para
+        justificar que \texttt{remove\_one m l} de fato diminui o tamanho da
+        lista, garantindo a terminação de \texttt{ss}.
+  \item \texttt{select\_min\_none}: se \texttt{select\_min l = None}, então
+        \texttt{l} é vazia — usado no caso base da prova do teorema final.
+\end{itemize}
+
+Ambas as provas são feitas por \emph{indução funcional}
+(\texttt{functional induction}), tática que utiliza o princípio de indução
+derivado automaticamente da definição recursiva de \texttt{select\_min},
+gerando exatamente os casos correspondentes aos ramos do \texttt{match}/
+\texttt{if} da definição original.
+
+\subsection{Propriedades de \texttt{remove\_one}}
+
+Três lemas caracterizam a função de remoção:
+
+\begin{itemize}
+  \item \texttt{remove\_one\_length}: remover um elemento presente na lista
+        diminui estritamente o seu tamanho — essencial para justificar a
+        medida de terminação de \texttt{ss}.
+  \item \texttt{remove\_one\_In}: todo elemento presente após a remoção já
+        estava presente na lista original.
+  \item \texttt{remove\_one\_perm}: se \texttt{x} pertence a \texttt{l},
+        então \texttt{l} é uma permutação de \texttt{x :: remove\_one x l}.
+        A prova utiliza o construtor \texttt{perm\_swap} de
+        \texttt{Permutation} para trazer o elemento removido do meio da
+        lista para a posição inicial.
+\end{itemize}
+
+Todas as três provas são feitas por indução estrutural simples sobre a
+lista \texttt{l}.
+
+\subsection{Lema auxiliar de ordenação}
+
+O lema \texttt{le\_all\_sorted} estabelece que, se \texttt{l} está ordenada
+e \texttt{x} é menor ou igual a todos os elementos de \texttt{l}, então
+\texttt{x :: l} também está ordenada. Este lema é o elo entre a corretude de
+\texttt{select\_min} (que garante \texttt{le\_all}) e a propriedade
+\texttt{Sorted} exigida pelo teorema final.
+
+\subsection{Teorema principal}
+
+A prova de \texttt{selectionsort\_correct} também é feita por indução
+funcional, agora sobre a definição de \texttt{ss}, gerando dois casos:
+
+\begin{itemize}
+  \item \textbf{Caso \texttt{select\_min l = None}}: pelo lema
+        \texttt{select\_min\_none}, conclui-se que \texttt{l = nil}, e as
+        duas propriedades (\texttt{Sorted} e \texttt{Permutation}) valem
+        trivialmente para a lista vazia.
+  \item \textbf{Caso \texttt{select\_min l = Some m}}: a hipótese de indução
+        garante que \texttt{ss (remove\_one m l)} já está ordenada e é uma
+        permutação de \texttt{remove\_one m l}. A partir daí:
+        \begin{itemize}
+          \item A \textbf{permutação} de \texttt{l} para
+                \texttt{m :: ss (remove\_one m l)} é obtida encadeando
+                \texttt{remove\_one\_perm} com a hipótese de indução, via
+                transitividade de \texttt{Permutation}.
+          \item A \textbf{ordenação} é obtida aplicando
+                \texttt{le\_all\_sorted}, para o que é necessário mostrar
+                que \texttt{m} é menor ou igual a todos os elementos de
+                \texttt{ss (remove\_one m l)}. Isso é feito "atravessando"
+                a permutação dada pela hipótese de indução (com o lema de
+                biblioteca \texttt{Permutation\_in}) para reduzir o problema
+                a \texttt{le\_all m l}, já estabelecido por
+                \texttt{select\_min\_correct}.
+        \end{itemize}
+\end{itemize}
+
+\section{Testes e verificação}
+\label{sec:testes}
+
+Além da prova formal, verificamos o comportamento computacional de
+\texttt{ss} sobre exemplos concretos, tanto por avaliação direta quanto por
+lemas demonstrados por \texttt{reflexivity} (o que garante que o resultado
+computado bate exatamente com o esperado, e não apenas "parece certo" ao
+olho):
+
+\begin{verbatim}
+Eval compute in ss [4;2;1;3].
+     = [1; 2; 3; 4]
+
+Eval compute in ss [5;4;3;2;1].
+     = [1; 2; 3; 4; 5]
+
+Eval compute in ss [].
+     = []
+
+Lemma teste1 : ss [4;2;1;3] = [1;2;3;4].
+Proof. reflexivity. Qed.
+
+Lemma teste2 : ss [5;4;3;2;1] = [1;2;3;4;5].
+Proof. reflexivity. Qed.
+
+Lemma teste3 : ss (@nil nat) = nil.
+Proof. reflexivity. Qed.
+\end{verbatim}
+
+Adicionalmente, executamos o comando \texttt{Print Assumptions
+selectionsort\_correct.} para confirmar que a prova do teorema principal não
+depende de nenhum \texttt{Admitted} ou axioma além dos já utilizados
+pela biblioteca padrão do Rocq.
+
+\section{Conclusão}
+
+A formalização apresentada corrige um erro presente na definição original
+de \texttt{ss} proposta no enunciado (Seção~\ref{sec:bug}), introduzindo a
+função auxiliar \texttt{remove\_one} para garantir que o elemento mínimo
+seja de fato removido da lista antes da chamada recursiva. Com essa
+correção, o teorema de corretude do Selection Sort
+(\texttt{selectionsort\_correct}) foi demonstrado por completo em Rocq,
+sem lacunas, estabelecendo tanto a propriedade de ordenação quanto a de
+permutação da lista de saída em relação à lista de entrada.
+
+\section{Código fonte completo}
+
+A seguir, o arquivo \texttt{selection\_sort.v} completo, com comentários
+formatados via \texttt{coqdoc}.
+
+\input{selection_sort.v.tex}
 
 \end{document}
