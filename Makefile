@@ -9,9 +9,11 @@
 #
 ############################################################################
 
-COQC = coqc
-COQDEP = coqdep
-COQDOC = coqdoc
+ROCQ = rocq
+COQC = $(ROCQ) c
+COQDEP = $(ROCQ) dep
+COQDOC = $(ROCQ) doc
+COQMKFILE = $(ROCQ) makefile
 
 MODULES	:= selection_sort
 TEX	:= $(MODULES:%=latex/%.v.tex)
@@ -35,10 +37,10 @@ coq: $(COQMKFILENAME)
 	@$(MAKE) -f $(COQMKFILENAME) -C src
 
 %.mk : Makefile _%
-	coq_makefile -f _$* -o $*.mk
+	$(COQMKFILE) -f _$* -o $*.mk
 
 $(COQMKFILENAME): Makefile
-	cd src && { echo "-R . $(LIBNAME) " ; ls *.v ; } > _CoqProject && coq_makefile -f _CoqProject -o $(COQMKFILENAME)
+	cd src && { echo "-R . $(LIBNAME) " ; ls *.v ; } > _CoqProject && $(COQMKFILE) -f _CoqProject -o $(COQMKFILENAME)
 
 install: all
 	@$(MAKE) -f $(COQMKFILENAME) install
@@ -54,11 +56,11 @@ $(TEX): force
 	$(COQDOC) --gallina --interpolate --latex --body-only -s \
 			$(patsubst %.v.tex,src/%.v,$(notdir $@)) -o $@
 
-doc: latex/relatorio.pdf $(TEX)
+doc: latex/main.pdf $(TEX)
 
-latex/relatorio.pdf: latex/relatorio.tex $(TEX) 
-	cd latex ; pdflatex -interaction=nonstopmode relatorio ; pdflatex -interaction=nonstopmode relatorio ; pdflatex -interaction=nonstopmode relatorio
+latex/main.pdf: latex/main.tex $(TEX)
+	cd latex ; pdflatex -interaction=nonstopmode main ; pdflatex -interaction=nonstopmode main ; pdflatex -interaction=nonstopmode main
 
 pdf:
-	evince latex/relatorio.pdf&
+	evince latex/main.pdf&
 

@@ -1,4 +1,7 @@
 (** * Correção do Selection Sort
+    Luís Eduardo Curi Serra - 251033574
+    Weldo Gonçalves da Silva Junior - 222014133
+
 
     Verificação formal do algoritmo Selection Sort em Rocq/Coq: prova-se que a
     função de ordenação produz uma [Permutation] da entrada que também está
@@ -38,7 +41,7 @@
     numa passagem, aqui o mínimo é obtido por [select_min] e removido por
     [remove_one min]. Isso corrige o bug da definição original de [ss], que
     recursava sobre a cauda [tl] em vez de remover o mínimo efetivamente
-    encontrado. *)
+    encontrado.*)
 
 From Stdlib Require Import Arith List Lia.
 From Stdlib Require Import Recdef.
@@ -193,7 +196,18 @@ Qed.
     [select_min], emite-o, e recursa sobre a lista sem esse mínimo
     ([remove_one]). A terminação é garantida por [measure length l]: cada
     chamada recursiva opera sobre [remove_one m l], estritamente menor que [l]
-    porque [m] pertence a [l] ([select_min_in] seguido de [remove_one_length]).*)
+    porque [m] pertence a [l] ([select_min_in] seguido de [remove_one_length]).
+    
+    Enunciado original do trabalho:
+      Fixpoint ss (l: list nat) :=
+        match l with
+        | nil => nil
+        | h::tl => match select_min l with
+                  | None => nil
+                  | Some m => m::(ss tl)
+                  end
+        end. 
+    *)
 Function ss (l : list nat) {measure length l} : list nat :=
   match select_min l with
   | None => nil
