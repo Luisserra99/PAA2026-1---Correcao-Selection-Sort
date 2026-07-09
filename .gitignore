@@ -1,0 +1,21 @@
+# Rocq/Coq build artifacts
+*.vo
+*.vok
+*.vos
+*.glob
+*.aux
+.*.aux
+.*.d
+*.cmi
+*.cmo
+*.cmx
+*.cmxs
+*.o
+
+# Generated makefiles (from coq_makefile / rocq makefile)
+*_make.mk
+*_make.mk.conf
+Makefile.coq
+Makefile.coq.conf
+.coqdeps.d
+.Makefile.coq.d

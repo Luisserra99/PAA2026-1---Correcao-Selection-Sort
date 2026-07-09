@@ -22,10 +22,10 @@
         capítulo "Selection: Selection Sort" (versão completa).
         https://coq.vercel.app/ext/sf/vfa/full/Selection.html
 
-    As referências [2] e [3] são o mesmo capítulo de VFA. Elas definem:
+    As referências [2] e [3] são o mesmo capítulo. Elas definem:
       - [select : nat -> list nat -> nat * list nat], que devolve o menor
         elemento e o restante da lista numa única passagem;
-      - [selsort]/[selection_sort] com um argumento de "combustível" (fuel)
+      - [selsort]/[selection_sort] com um argumento de (fuel)
         para garantir a terminação; e
       - a especificação
         [is_a_sorting_algorithm f := forall al, Permutation al (f al) /\ sorted (f al)].
@@ -33,23 +33,6 @@
     [Function] com [measure] — abordagem adotada aqui (em [select_min] e [ss]).
     O predicado [sorted] de VFA equivale ao [Sorted le] da biblioteca padrão,
     usado neste arquivo.
-
-    Correspondência entre este arquivo e VFA (referências [2] e [3]):
-
-      este arquivo             VFA - Selection Sort
-      ----------------------   -------------------------------------------
-      Sorted le / Permutation  sorted / Permutation
-      select_min + remove_one  select (menor + restante numa passagem)
-      select_min_correct       select_smallest  (mínimo <= todo o restante)
-      select_min_in            select_in        (mínimo pertence à lista)
-      remove_one_perm          parte de select_perm
-      remove_one_length        select_rest_length
-      le_all_sorted            cons_of_small_maintains_sort
-      ss  (Function/measure)   selection_sort  (selsort + fuel)
-      ss_perm                  selection_sort_perm
-      ss_sorted                selection_sort_sorted
-      is_a_sorting_algorithm   is_a_sorting_algorithm
-      selection_sort_correct   selection_sort_is_correct
 
     Diferença de projeto: em vez de [select] devolver o par (mínimo, resto)
     numa passagem, aqui o mínimo é obtido por [select_min] e removido por
@@ -81,8 +64,7 @@ Defined.
 Definition le_all x l := forall y, In y l -> x <= y.
 
 (** Se [select_min l] retorna um natural [m], então [m] é menor ou igual a
-    todos os elementos da lista [l]. Corresponde a [select_smallest] em VFA
-    (referências [2] e [3]). *)
+    todos os elementos da lista [l]. *)
 Lemma select_min_correct : forall l m, select_min l = Some m -> le_all m l.
 Proof.
   intros l m H.
@@ -116,8 +98,7 @@ Qed.
 
 (** Se [select_min l] retorna [Some m], então [m] pertence a [l]. Isso é
     necessário para garantir que [remove_one] de fato diminui o tamanho da
-    lista (usado na medida da função [ss] mais abaixo). Corresponde a
-    [select_in] em VFA (referências [2] e [3]). *)
+    lista (usado na medida da função [ss] mais abaixo). *)
 Lemma select_min_in : forall l m, select_min l = Some m -> In m l.
 Proof.
   intros l m H.
@@ -155,9 +136,7 @@ Fixpoint remove_one (x : nat) (l : list nat) : list nat :=
   end.
 
 (** Remover uma ocorrência de [x] (presente em [l]) diminui estritamente o
-    tamanho. Corresponde a [select_rest_length] em VFA (referências [2] e [3]),
-    que garante a mesma propriedade de decréscimo para o resto devolvido por
-    [select]. *)
+    tamanho.*)
 Lemma remove_one_length : forall x l, In x l -> length (remove_one x l) < length l.
 Proof.
   induction l as [| h tl IH]; intros Hin.
@@ -181,8 +160,7 @@ Proof.
 Qed.
 
 (** Retirar uma ocorrência de [x] e colocá-la na cabeça é uma permutação da
-    lista original. Corresponde à parte de permutação de [select_perm] em VFA
-    (referências [2] e [3]). *)
+    lista original. *)
 Lemma remove_one_perm : forall x l, In x l -> Permutation l (x :: remove_one x l).
 Proof.
   intros x l. induction l as [| h tl IH]; intros Hin.
@@ -198,8 +176,7 @@ Proof.
 Qed.
 
 (** Se [l] está ordenada e [x] é menor ou igual a todos os elementos de [l],
-    então [x::l] também está ordenada. Corresponde a
-    [cons_of_small_maintains_sort] em VFA (referências [2] e [3]). *)
+    então [x::l] também está ordenada. *)
 Lemma le_all_sorted : forall l x, Sorted le l -> le_all x l -> Sorted le (x :: l).
 Proof.
   intros l x Hs Hall.
@@ -216,11 +193,7 @@ Qed.
     [select_min], emite-o, e recursa sobre a lista sem esse mínimo
     ([remove_one]). A terminação é garantida por [measure length l]: cada
     chamada recursiva opera sobre [remove_one m l], estritamente menor que [l]
-    porque [m] pertence a [l] ([select_min_in] seguido de [remove_one_length]).
-
-    Corresponde a [selection_sort] em VFA (referências [2] e [3]), com
-    [Function]/[measure] no lugar do argumento de combustível (fuel) — a
-    técnica avançada sugerida ao final daquele capítulo. *)
+    porque [m] pertence a [l] ([select_min_in] seguido de [remove_one_length]).*)
 Function ss (l : list nat) {measure length l} : list nat :=
   match select_min l with
   | None => nil
@@ -234,15 +207,14 @@ Defined.
 (** Alias com o nome usado nas referências [2] e [3]. *)
 Definition selection_sort (l : list nat) : list nat := ss l.
 
-(* Testes de sanidade: [ss] de fato ordena. *)
+(* Testes: [ss] de fato ordena. *)
 Example ss_example : ss [3;1;2;5;0;4] = [0;1;2;3;4;5].
 Proof. reflexivity. Qed.
 
-Example ss_example_dup : ss [2;1;2;1;3] = [1;1;2;2;3].
+Example ss_example_2 : ss [2;1;2;1;3] = [1;1;2;2;3].
 Proof. reflexivity. Qed.
 
-(** [ss] preserva os elementos: a saída é uma permutação da entrada.
-    Corresponde a [selection_sort_perm] em VFA (referências [2] e [3]). *)
+(** [ss] preserva os elementos: a saída é uma permutação da entrada.*)
 Lemma ss_perm : forall l, Permutation l (ss l).
 Proof.
   intro l.
@@ -259,8 +231,7 @@ Qed.
 (** [ss] devolve uma lista ordenada. A cada passo, o mínimo emitido é menor ou
     igual a todos os elementos restantes (por [select_min_correct] combinado
     com [remove_one_In] e [ss_perm]), então [le_all_sorted] garante que
-    prependê-lo à cauda ordenada preserva a ordenação. Corresponde a
-    [selection_sort_sorted] em VFA (referências [2] e [3]). *)
+    prependê-lo à cauda ordenada preserva a ordenação.*)
 Lemma ss_sorted : forall l, Sorted le (ss l).
 Proof.
   intro l.
@@ -283,15 +254,13 @@ Proof.
       * exact Hy.
 Qed.
 
-(** Especificação de "algoritmo de ordenação correto", como em VFA
-    (referências [2] e [3]): [f] devolve uma permutação da entrada que está
-    ordenada. Combina as duas propriedades no espírito do registro
-    [Sorting_correct] de osa1 (referência [1]). *)
+(** Especificação de "algoritmo de ordenação correto": [f] devolve 
+    uma permutação da entrada que está
+    ordenada. Combina as duas propriedades. *)
 Definition is_a_sorting_algorithm (f : list nat -> list nat) : Prop :=
   forall l, Permutation l (f l) /\ Sorted le (f l).
 
-(** Corretude do selection sort. Corresponde a [selection_sort_is_correct] em
-    VFA (referências [2] e [3]). *)
+(** Corretude do selection sort. *)
 Theorem selection_sort_correct : is_a_sorting_algorithm selection_sort.
 Proof.
   intro l. unfold selection_sort. split.
